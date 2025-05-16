@@ -8,7 +8,7 @@ export default function UploadPage() {
     <div className="max-w-md mx-auto bg-white p-6 rounded shadow mt-10">
       <h2 className="text-xl font-semibold mb-4">Excel Upload</h2>
       <p className="text-black-600 text-sm mb-4">
-        Expected columns: <strong>ShippingID</strong> and <strong>City</strong>
+        Expected columns: <strong>shipping_code</strong> and <strong>city_odd</strong>
       </p>
       <ExcelUploadForm />
     </div>
