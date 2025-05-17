@@ -1,10 +1,12 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 
 export default function TrayFinderPage() {
   const [trayId, setTrayId] = useState<string>('');
-  const [history, setHistory] = useState<Array<{ location: number; timestamp: string }>>([]);
+  const [history, setHistory] = useState<
+    Array<{ location: number; locationName: string; timestamp: string }>
+  >([]);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export default function TrayFinderPage() {
           <ul className="list-disc list-inside text-black space-y-2">
             {history.map((item, idx) => (
               <li key={idx}>
-                <strong>Location:</strong> {item.location} &nbsp;|&nbsp;
+                <strong>Location:</strong> {item.locationName} ({item.location}) &nbsp;|&nbsp;
                 <strong>At:</strong> {new Date(item.timestamp).toLocaleString()}
               </li>
             ))}

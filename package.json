@@ -11,18 +11,12 @@
   "dependencies": {
     "@prisma/client": "^6.7.0",
     "bcryptjs": "^3.0.2",
-<<<<<<< HEAD
-=======
     "mysql2": "^3.14.1",
->>>>>>> 27c4a4a (Final changes before deployment)
     "next": "15.3.2",
     "nodeman": "^1.1.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-<<<<<<< HEAD
-=======
     "react-icons": "^5.5.0",
->>>>>>> 27c4a4a (Final changes before deployment)
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
