@@ -41,3 +41,36 @@ model DispatchScan {
   nexsId     String
   timestamp  DateTime @default(now())
 }
+<<<<<<< HEAD
+=======
+
+model OperationsMetadata {
+  id         Int     @id @default(autoincrement())
+  locationId String  @map("location_id")
+  cityOdd    String  @map("city_odd")
+
+  @@map("OperationsMetadata")
+}
+
+model MaintenanceShopIssue {
+  id         Int      @id @default(autoincrement())
+  pid        String
+  partName   String
+  quantity   Int
+  unit       String
+  rate       Float
+  category   String
+  total      Float
+  issuedAt   DateTime @default(now())
+}
+
+datasource onSiteDB {
+  provider = "mysql"
+  url      = env("ON_SITE_DB_URL")
+}
+
+generator onSiteClient {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/onSiteClient"
+}
+>>>>>>> 27c4a4a (Final changes before deployment)
