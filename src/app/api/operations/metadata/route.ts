@@ -24,11 +24,16 @@ export async function GET(req: Request) {
     }
 
     // Persist into fasttrackscan using the correct field names
+    // Calculate IST time
+    const nowUTC = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in ms
+    const nowIST = new Date(nowUTC.getTime() + istOffset);
+
     await prisma.fastTrackScan.create({
       data: {
-        locationID: record.locationId,  
-        cityOdd:   record.cityOdd,      
-        // you can omit `time` since it defaults to `now()`
+        locationID: record.locationId,
+        cityOdd: record.cityOdd,
+        time: nowIST, // store IST time
       },
     });
 
