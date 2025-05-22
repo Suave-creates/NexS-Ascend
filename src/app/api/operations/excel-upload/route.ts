@@ -1,54 +1,80 @@
-// src/app/api/operations/excel-upload/route.ts
 import { NextResponse } from 'next/server';
 import prisma from '@/utils/prisma';
-import * as XLSX from 'xlsx';
+import * as xlsx from 'xlsx';
+
+export const config = { api: { bodyParser: false } };
+
+function normalizeRow(row: any) {
+  const normalized: Record<string, any> = {};
+  for (const key in row) {
+    normalized[key.trim().toLowerCase()] = row[key];
+  }
+  return normalized;
+}
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    const file = formData.get('file') as Blob;
+    const file = formData.get('file') as File;
     if (!file) {
-      return NextResponse.json(
-        { error: 'No file uploaded' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Read workbook and first sheet
     const arrayBuffer = await file.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const buffer = Buffer.from(arrayBuffer);
+
+    const workbook = xlsx.read(buffer, { type: 'buffer' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = xlsx.utils.sheet_to_json<any>(sheet, { defval: null });
 
-    // Convert to JSON and extract only rows with both columns
-    const rawRows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: null });
-    const rows = rawRows
-      .filter(row => row.location_id != null && row.city_odd != null)
-      .map(row => ({
-        locationId: String(row.location_id).trim(),
-        cityOdd: String(row.city_odd).trim(),
-      }));
+    const acceptedRows: { locationId: string; cityOdd: string; shipToCust: string | null }[] = [];
+    for (const rawRow of rows) {
+      const row = normalizeRow(rawRow);
+      const locationId = String(row['location_id'] ?? '').trim();
+      const cityOdd = String(row['city_odd'] ?? '').trim();
+      const shipToCust = row['ship_to_cust'] !== undefined && row['ship_to_cust'] !== null
+        ? String(row['ship_to_cust']).trim()
+        : null;
 
-    if (rows.length === 0) {
-      return NextResponse.json(
-        { error: 'No valid rows with location_id and city_odd found' },
-        { status: 400 }
-      );
+      // Skip rows with blank locationId
+      if (!locationId) continue;
+
+      // Accept Nagpur always
+      if (cityOdd.toLowerCase() === 'nagpur') {
+        acceptedRows.push({ locationId, cityOdd: 'Nagpur', shipToCust });
+      }
+      // Accept Bengaluru only if ship_to_cust is '1'
+      else if (
+        cityOdd.toLowerCase() === 'bengaluru' &&
+        shipToCust === '1'
+      ) {
+        acceptedRows.push({ locationId, cityOdd: 'Bengaluru', shipToCust });
+      }
     }
 
-    // Delete all previous entries before inserting new data
-    await prisma.operationsMetadata.deleteMany();
+    await prisma.operationsMetadata.deleteMany({});
+    await prisma.$executeRawUnsafe('ALTER TABLE OperationsMetadata AUTO_INCREMENT = 1');
+    const count = await prisma.operationsMetadata.count();
+    console.log('Rows after delete:', count);
 
-    // Insert new batch
-    const operationsInserts = rows.map(r =>
-      prisma.operationsMetadata.create({ data: r })
-    );
-    await prisma.$transaction(operationsInserts);
+    let insertedCount = 0;
+    if (acceptedRows.length > 0) {
+      const result = await prisma.operationsMetadata.createMany({ data: acceptedRows });
+      insertedCount = result.count ?? acceptedRows.length;
+    }
 
-    return NextResponse.json({ success: true, count: rows.length });
-  } catch (err: any) {
-    console.error('Operations Excel Upload API error:', err);
+    const maxId = await prisma.operationsMetadata.aggregate({ _max: { id: true } });
+    console.log('Max ID after insert:', maxId._max.id);
+
+    return NextResponse.json({
+      success: true,
+      inserted: insertedCount,
+      message: `Successfully uploaded ${insertedCount} rows.`,
+    });
+  } catch (error) {
+    console.error('Excel upload error:', error);
     return NextResponse.json(
-      { error: err.message || 'Upload failed' },
+      { error: 'Failed to process file', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

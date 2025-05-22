@@ -25,12 +25,8 @@ export async function GET(req: Request) {
 
   try {
     // Fetch the last 5 scan entries (including duplicates)
-    const [rows] = await pool.query<{
-      trayId: string;
-      location: number;
-      timestamp: Date;
-      action: number;
-    }[]>(`
+    const [rows] = await pool.query(
+      `
       SELECT
         tray_barcode AS trayId,
         location_id  AS location,
@@ -40,11 +36,18 @@ export async function GET(req: Request) {
       WHERE tray_barcode = ?
       ORDER BY scan_time DESC
       LIMIT 5
-    `, [trayId]);
-
+    `,
+      [trayId]
+    );
+    const typedRows = rows as Array<{
+      trayId: string;
+      location: number;
+      timestamp: string;
+      action: string;
+    }>;
     // Annotate each record from JSON map
     const locMap = loadLocationMap();
-    const history = rows.map(r => ({
+    const history = typedRows.map(r => ({
       trayId: r.trayId,
       location: r.location,
       locationName: locMap[r.location] ?? `Location ${r.location}`,

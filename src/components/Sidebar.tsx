@@ -39,13 +39,16 @@ export default function Sidebar() {
 
     {
       icon: '📦',
-      label: 'Packing–Dispatch',
+      label: 'Packing Dispatch',
       children: [
         { href: '/packing-dispatch/packing', icon: '📦', label: 'Packing Scans' },
         { href: '/packing-dispatch/dispatch', icon: '🚚', label: 'Dispatch Scans' },
+        { href: '/packing-dispatch/fr0', icon: '👓', label: 'FR0 Scans' },
+        { href: '/packing-dispatch/bulk', icon: '🛒', label: 'Bulk Scans' },
         { href: '/packing-dispatch/upload', icon: '📁', label: 'Excel Upload' },
       ],
     },
+    
   ];
 
   const toggleSection = (label: string) => {

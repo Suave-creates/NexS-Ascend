@@ -1,6 +1,29 @@
-"use client";
+// src/app/maintenance/shop-issue/page.tsx
 
+'use client';
 import React, { useState, useEffect } from 'react';
+
+const DEPARTMENTS = [
+  'ASRS',
+  'Conveyor',
+  'Dispatch',
+  'Fitting',
+  'Frames',
+  'Lens Lab - ARC',
+  'Lens Lab - Hard Coat',
+  'Lens Lab - Surfacing 1',
+  'Lens Lab - Surfacing 2',
+  'Maintenance Others',
+  'MEI',
+  'Packing',
+  'QC',
+  'Utility - Electrical',
+  'Utility - ETP/STP',
+  'Utility - HVAC',
+  'Utility - Compressor',
+  'Utility - Others',
+  'Utility - WTP',
+].sort();
 
 export default function MaintenanceShopIssuePage() {
   const [pid, setPid] = useState('');
@@ -9,10 +32,11 @@ export default function MaintenanceShopIssuePage() {
   const [unit, setUnit] = useState('nos');
   const [rate, setRate] = useState(0);
   const [category, setCategory] = useState('R&M');
+  const [destination, setDestination] = useState('');
+  const [department, setDepartment] = useState(DEPARTMENTS[0]);
   const [total, setTotal] = useState(0);
   const [message, setMessage] = useState('');
 
-  // Recalculate total whenever quantity or rate changes
   useEffect(() => {
     setTotal(quantity * rate);
   }, [quantity, rate]);
@@ -20,7 +44,18 @@ export default function MaintenanceShopIssuePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const issuedAt = new Date().toISOString();
-    const payload = { pid, partName, quantity, unit, rate, category, total, issuedAt };
+    const payload = {
+      pid,
+      partName,
+      quantity,
+      unit,
+      rate,
+      category,
+      destination,
+      department,
+      total,
+      issuedAt,
+    };
 
     try {
       const res = await fetch('/api/maintenance/shop-issue', {
@@ -45,51 +80,51 @@ export default function MaintenanceShopIssuePage() {
         <form onSubmit={handleSubmit} className="space-y-4 text-black">
           {/* PID */}
           <div>
-            <label htmlFor="pid" className="block mb-1 font-medium text-black">PID</label>
+            <label htmlFor="pid" className="block mb-1 font-medium">PID</label>
             <input
               id="pid"
               type="text"
               value={pid}
               onChange={e => setPid(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+              className="w-full border border-gray-300 rounded px-3 py-2"
               required
             />
           </div>
 
           {/* Spare Part Name */}
           <div>
-            <label htmlFor="partName" className="block mb-1 font-medium text-black">Spare Part Name</label>
+            <label htmlFor="partName" className="block mb-1 font-medium">Spare Part Name</label>
             <input
               id="partName"
               type="text"
               value={partName}
               onChange={e => setPartName(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+              className="w-full border border-gray-300 rounded px-3 py-2"
               required
             />
           </div>
 
-          {/* Quantity and Unit */}
+          {/* Quantity & Unit */}
           <div className="flex space-x-4">
             <div className="flex-1">
-              <label htmlFor="quantity" className="block mb-1 font-medium text-black">Quantity</label>
+              <label htmlFor="quantity" className="block mb-1 font-medium">Quantity</label>
               <input
                 id="quantity"
                 type="number"
                 min="0"
                 value={quantity}
                 onChange={e => setQuantity(Number(e.target.value))}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                className="w-full border border-gray-300 rounded px-3 py-2"
                 required
               />
             </div>
             <div className="flex-1">
-              <label htmlFor="unit" className="block mb-1 font-medium text-black">Unit</label>
+              <label htmlFor="unit" className="block mb-1 font-medium">Unit</label>
               <select
                 id="unit"
                 value={unit}
                 onChange={e => setUnit(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                className="w-full border border-gray-300 rounded px-3 py-2"
               >
                 <option value="nos">nos</option>
                 <option value="kg">kg</option>
@@ -97,27 +132,27 @@ export default function MaintenanceShopIssuePage() {
             </div>
           </div>
 
-          {/* Rate and Category */}
+          {/* Rate & Category */}
           <div className="flex space-x-4">
             <div className="flex-1">
-              <label htmlFor="rate" className="block mb-1 font-medium text-black">Rate</label>
+              <label htmlFor="rate" className="block mb-1 font-medium">Rate</label>
               <input
                 id="rate"
                 type="number"
                 min="0"
                 value={rate}
                 onChange={e => setRate(Number(e.target.value))}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                className="w-full border border-gray-300 rounded px-3 py-2"
                 required
               />
             </div>
             <div className="flex-1">
-              <label htmlFor="category" className="block mb-1 font-medium text-black">Category</label>
+              <label htmlFor="category" className="block mb-1 font-medium">Category</label>
               <select
                 id="category"
                 value={category}
                 onChange={e => setCategory(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-black"
+                className="w-full border border-gray-300 rounded px-3 py-2"
               >
                 <option value="R&M">R&M</option>
                 <option value="Consumable">Consumable</option>
@@ -125,14 +160,47 @@ export default function MaintenanceShopIssuePage() {
             </div>
           </div>
 
+          {/* Destination of Use / Machine */}
+          <div>
+            <label htmlFor="destination" className="block mb-1 font-medium">
+              Destination of Use / Machine
+            </label>
+            <input
+              id="destination"
+              type="text"
+              value={destination}
+              onChange={e => setDestination(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+              required
+            />
+          </div>
+
+          {/* Department */}
+          <div>
+            <label htmlFor="department" className="block mb-1 font-medium">
+              Department
+            </label>
+            <select
+              id="department"
+              value={department}
+              onChange={e => setDepartment(e.target.value)}
+              className="w-full border border-gray-300 rounded px-3 py-2"
+            >
+              {DEPARTMENTS.map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Total */}
           <div>
-            <label className="block mb-1 font-medium text-black">Total</label>
-            <div className="w-full border border-gray-300 rounded px-3 py-2 text-black bg-gray-100">
+            <label className="block mb-1 font-medium">Total</label>
+            <div className="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100">
               {total.toFixed(2)}
             </div>
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
             className="w-full px-4 py-2 bg-[#1f295c] text-white font-medium rounded hover:bg-opacity-90 transition"
@@ -141,8 +209,7 @@ export default function MaintenanceShopIssuePage() {
           </button>
         </form>
 
-        {/* Positioned below form */}
-        {message && (
+        {message && ( 
           <div
             style={{ background: 'rgba(212,237,218,0.3)' }}
             className="mt-4 px-6 py-3 rounded shadow-lg"

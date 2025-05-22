@@ -21,9 +21,18 @@ export async function POST(req: Request) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rawRows: any[] = XLSX.utils.sheet_to_json(sheet);
 
-    // Safely extract only the required columns
+    // Only accept Nagpur, Bengaluru (with ship_to_cust === '1'), and Surat
     const rows = rawRows
-      .filter((row) => row.shipping_code && row.city_odd)
+      .filter((row) => {
+        const city = String(row.city_odd ?? '').trim().toLowerCase();
+        if (city === 'nagpur' || city === 'surat') {
+          return row.shipping_code; // must have shipping_code
+        }
+        if (city === 'bengaluru') {
+          return row.shipping_code && String(row.ship_to_cust ?? '').trim() === '1';
+        }
+        return false;
+      })
       .map((row) => ({
         shippingID: String(row.shipping_code).trim(),
         city:       String(row.city_odd).trim(),
@@ -36,7 +45,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // In one transaction: clear out historic data, then bulk insert new
+    // In one transaction: clear out historic data, reset auto-increment, then bulk insert new
+    await prisma.$executeRawUnsafe('ALTER TABLE shippingMetadata AUTO_INCREMENT = 1');
     await prisma.$transaction([
       prisma.shippingMetadata.deleteMany(),
       prisma.shippingMetadata.createMany({

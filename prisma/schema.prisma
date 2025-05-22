@@ -42,7 +42,7 @@ model OperationsMetadata {
   id         Int     @id @default(autoincrement())
   locationId String  @map("location_id")
   cityOdd    String  @map("city_odd")
-
+  shipToCust String? @map("ship_to_cust")
   @@map("OperationsMetadata")
 }
 
@@ -55,6 +55,8 @@ model MaintenanceShopIssue {
   rate       Float
   category   String
   total      Float
+  destination String  @map("destination_of_use")
+  department  String
   issuedAt   DateTime @default(now())
 }
 
@@ -65,4 +67,20 @@ model FastTrackScan {
   time       DateTime @map("time") @default(now())
 
   @@map("fasttrackscan")
+}
+
+model FR0Scan {
+  id           Int   @id @default(autoincrement())
+  scanId       String   
+  stationId    String
+  nexsId       String
+  createdAt    DateTime @default(now())
+}
+
+model BulkScan {
+  id         Int      @id @default(autoincrement())
+  scanId     String
+  stationId  String
+  nexsId     String
+  timestamp  DateTime @default(now())
 }
